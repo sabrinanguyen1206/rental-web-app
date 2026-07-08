@@ -1,3 +1,5 @@
+const jwt = require("jsonwebtoken");
+const jwtConfig = require("../config/jwt");
 const accountModel = require("../models/account.model");
 
 const login = async (req, res) => {
@@ -19,10 +21,28 @@ const login = async (req, res) => {
         });
     }
 
+    const token = jwt.sign(
+        {
+            id: user.id,
+            email: user.email,
+            role: user.role
+        },
+        jwtConfig.secret,
+        {
+            expiresIn: "7d"
+        }
+    );
+    
     return res.json({
         status: 200,
         message: "Đăng nhập thành công",
-        data: user
+        token,
+        data: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        }
     });
 };
 

@@ -1,16 +1,25 @@
 const pool = require("../config/db"); 
 
 const getRooms = async (room) => {
+    console.log("GET ROOMS RUNNING");
     const title = room.title;
     const minPrice = room.minPrice;
     const maxPrice = room.maxPrice;
 
-    let query = "SELECT * FROM rooms WHERE 1=1";
+    let query = `
+    SELECT
+        rooms.*,
+        images.url AS image
+    FROM rooms
+    LEFT JOIN images
+    ON rooms.cover_image_id = images.id
+    WHERE 1=1
+    `;
     const values = [];
 
     if (title) {
         values.push(`%${title}%`);
-        query += ` AND title ILIKE $${values.length}`;
+        query += ` AND rooms.title ILIKE $${values.length}`;
     }
 
     if (minPrice) {
@@ -43,26 +52,115 @@ const getRoomImages = async (id) => {
 
 const getRoomById = async (id) => {   // tạo hàm getRoomById để lấy thông tin room có id tương ứng
     const result = await pool.query(
-        "SELECT * FROM rooms WHERE id = $1", 
-        [id]     // lấy dữ liệu room có id tương ứng từ db
+        `
+        SELECT
+            rooms.*,
+            images.url AS image
+        FROM rooms
+        LEFT JOIN images
+        ON rooms.cover_image_id = images.id
+        WHERE rooms.id = $1
+        `,
+        [id]
     );
     return result.rows[0];    // trả về dữ liệu room có id tương ứng về dạng JSON
     };
 
-const createRoom = async (title, price) => {   // tạo hàm createRoom để thêm room mới vào db
-    const result = await pool.query(
-        "INSERT INTO rooms (title, price) VALUES ($1, $2) RETURNING *", 
-        [title, price]     // Thêm dữ liệu title và capacity vào db rooms, và trả về dữ liệu room mới tạo   
-    );
-    return result.rows[0];   // trả về dữ liệu room mới được thêm vào dạng JSON
+const createRoom = async (
+        title,
+        price,
+        status,
+        image
+    ) => {
+    
+        // 1. Lưu ảnh
+        const imageResult = await pool.query(
+            `
+            INSERT INTO images (url)
+            VALUES ($1)
+            RETURNING id
+            `,
+            [image]
+        );
+    
+        const imageId = imageResult.rows[0].id;
+    
+        // 2. Tạo phòng
+        const roomResult = await pool.query(
+            `
+            INSERT INTO rooms
+            (
+                title,
+                price,
+                status,
+                cover_image_id
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                $4
+            )
+            RETURNING *
+            `,
+            [
+                title,
+                price,
+                status,
+                imageId
+            ]
+        );
+    
+        return roomResult.rows[0];
+    
 };
 
-const updateRoom = async (id, title, price) => {    // tạo hàm updateRoom để cập nhật thông tin room có id tương ứng`
-    const result = await pool.query(
-        "UPDATE rooms SET title = $1, price = $2 WHERE id = $3 RETURNING *", 
-        [title, price, id]     // Cập nhật dữ liệu title và capacity của room có id tương ứng trong db rooms, và trả về dữ liệu room đã được cập nhật
+const updateRoom = async (
+    id,
+    title,
+    price,
+    status,
+    image
+) => {
+
+    // 1. Cập nhật thông tin phòng
+    const roomResult = await pool.query(
+        `
+        UPDATE rooms
+        SET
+            title = $1,
+            price = $2,
+            status = $3
+        WHERE id = $4
+        RETURNING *
+        `,
+        [
+            title,
+            price,
+            status,
+            id
+        ]
     );
-    return result.rows[0];   // trả về dữ liệu room đã được cập nhật về dạng JSON
+
+    // 2. Cập nhật ảnh đại diện
+    await pool.query(
+        `
+        UPDATE images
+        SET url = $1
+        WHERE id = (
+            SELECT cover_image_id
+            FROM rooms
+            WHERE id = $2
+        )
+        `,
+        [
+            image,
+            id
+        ]
+    );
+
+    return roomResult.rows[0];
 };
 
 const deleteRoom = async (id) => {    // tạo hàm deleteRoom để xóa room có id tương ứng

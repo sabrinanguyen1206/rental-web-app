@@ -25,21 +25,47 @@ const getRoomById = async (req, res) => {
 };
 
 const createRoom = async (req, res) => {
-    const { title, price } = req.body;
 
-    const newRoom = await roomsModel.createRoom(title, price);
+    const {
+        title,
+        price,
+        status,
+        image,
+    } = req.body;
 
-    return res.json(newRoom);
-}
+    const room = await roomsModel.createRoom(
+        title,
+        price,
+        status,
+        image
+    );
+
+    return res.json(room);
+};
 
 const updateRoom = async (req, res) => {
-    const id = req.params.id;
-    const { title, price } = req.body;
 
-    const updatedRoom = await roomsModel.updateRoom(id, title, price);
+    console.log(req.body);
+    const id = req.params.id;
+
+    const {
+        title,
+        price,
+        status,
+        image,
+    } = req.body;
+
+    const updatedRoom = await roomsModel.updateRoom(
+        id,
+        title,
+        price,
+        status,
+        image
+    );
 
     return res.json(updatedRoom);
-}
+
+};
 
 const deleteRoom = async (req, res) => {
     const id = req.params.id;
