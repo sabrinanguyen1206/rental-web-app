@@ -8,6 +8,8 @@ const bookingRouter = require("./routes/booking.routes");
 const appointmentRoutes = require("./routes/appointment.routes");
 const auth = require("./middlewares/auth");
 const appointmentController = require("./controllers/appointment.controller");
+const rentalRequestRoutes = require("./routes/rentalRequest.routes");
+
 
 app.use(express.json()); // Middleware để parse JSON body của request, giúp chúng ta có thể đọc dữ liệu gửi lên từ client dưới dạng JSON
 app.use(cors());
@@ -16,6 +18,7 @@ app.use("/rooms", roomRouter);
 app.use("/account", accountRouter);
 app.use("/bookings", bookingRouter);
 app.use("/appointments", appointmentRoutes);
+app.use( "/rental-requests", rentalRequestRoutes);
 app.delete(
     "/appointments/:id",
     auth,

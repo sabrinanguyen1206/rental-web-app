@@ -31,7 +31,8 @@ const getRooms = async (room) => {
         values.push(maxPrice);
         query += ` AND price <= $${values.length}`;
     }
-
+    query += ` ORDER BY rooms.id ASC`;
+    console.log(query);
     const result = await pool.query(query, values);
 
     return result.rows;
