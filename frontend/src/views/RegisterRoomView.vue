@@ -11,7 +11,7 @@ const booking = ref({
   email: "",
   occupation: "",
   workplace: "",
-  people_count: 1,
+  people_count: "",
   move_in_date: "",
   rental_period: "",
   purpose: "",
@@ -58,21 +58,26 @@ const submitBooking = async () => {
         router.push("/login");
         return;
     }
-    const response = await fetch("http://localhost:3000/booking", {
+    const response = await fetch("http://localhost:3000/rental-requests", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
      },
       body: JSON.stringify({
-        room_id: Number(route.params.roomId),
+        room_id: Number(route.params.id),
         ...booking.value,
       }),
     });
 
     const data = await response.json();
 
-    alert("Đăng ký thành công!");
+    if (!response.ok) {
+    alert(data.message || "Gửi yêu cầu thất bại");
+    return;
+}
+
+    alert("Đã gửi yêu cầu thuê. Quản lý sẽ xem xét và phản hồi sớm.");
     booking.value = {
     customer_name: "",
     citizen_id: "",

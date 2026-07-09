@@ -54,7 +54,7 @@ onMounted(() => {
 
     <button
       class="booking-btn"
-      @click="router.push('/register-room')"
+      @click="router.push(`/register-room/${room.id}`)"
     >
       Đăng ký thuê ở
     </button>
